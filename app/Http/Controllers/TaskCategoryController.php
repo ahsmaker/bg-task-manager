@@ -2,51 +2,46 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TaskCategory;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use App\Exceptions\TaskCategoryNotFoundException;
+use App\Http\Requests\StoreTaskCategoryRequest;
+use App\Http\Requests\UpdateTaskCategoryRequest;
+use App\Services\TaskCategoryService;
 
 class TaskCategoryController extends Controller
 {
+    protected TaskCategoryService $taskCategoryService;
+
+    public function __construct(TaskCategoryService $taskCategoryService)
+    {
+        $this->taskCategoryService = $taskCategoryService;
+    }
     public function index()
     {
-        $categories = TaskCategory::all();
+        $categories = $this->taskCategoryService->getAllTaskCategories();
         return response()->json($categories);
     }
 
-    public function store(Request $request)
+    public function store(StoreTaskCategoryRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:512|unique:task_categories,name',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
-        }
-
-        $category = TaskCategory::create($request->all());
-        return response()->json($category, 201);
+        $task = $this->taskCategoryService->createTaskCategory($request->validated());
+        return response()->json($task, 201);
     }
 
-    public function update(Request $request, $id)
+    /**
+     * @throws TaskCategoryNotFoundException
+     */
+    public function update(UpdateTaskCategoryRequest $request, $id)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:512|unique:task_categories,name,' . $id,
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
-        }
-
-        $category = TaskCategory::findOrFail($id);
-        $category->update($request->all());
-        return response()->json($category);
+        $task = $this->taskCategoryService->updateTaskCategory($id, $request->validated());
+        return response()->json($task);
     }
 
+    /**
+     * @throws TaskCategoryNotFoundException
+     */
     public function destroy($id)
     {
-        $category = TaskCategory::findOrFail($id);
-        $category->delete();
+        $this->taskCategoryService->deleteTaskCategory($id);
         return response()->json(null, 204);
     }
 }
