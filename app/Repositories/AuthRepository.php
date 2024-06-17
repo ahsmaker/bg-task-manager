@@ -28,8 +28,8 @@ class AuthRepository implements AuthRepositoryInterface
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return new AuthResultCollection([
-            'access_token_type' => 'Bearer',
-            'access_token'      => $token,
+            'token_type'   => 'Bearer',
+            'access_token' => $token,
         ]);
     }
 }
