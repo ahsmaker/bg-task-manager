@@ -8,9 +8,23 @@ use Illuminate\Support\Facades\Validator;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = auth()->user()->tasks;
+        $query = auth()->user()->tasks();
+
+        if ($request->has('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->input('category_id'));
+        }
+
+        if ($request->has('priority')) {
+            $query->where('priority', $request->input('priority'));
+        }
+
+        $tasks = $query->get();
         return response()->json($tasks);
     }
 
@@ -20,6 +34,7 @@ class TaskController extends Controller
             'title'       => 'required|string|max:512',
             'description' => 'required|string',
             'due_date'    => 'required|date|after:today',
+            'category_id' => 'required|integer|exists:task_categories,id',
             'status'      => 'required|in:' . implode(',', array_keys(Task::getStatusOptions())),
             'priority'    => 'required|in:' . implode(',', array_keys(Task::getPriorityOptions())),
         ]);
@@ -47,6 +62,7 @@ class TaskController extends Controller
             'title'       => 'sometimes|required|string|max:512',
             'description' => 'sometimes|required|string',
             'due_date'    => 'sometimes|required|date|after:today',
+            'category_id' => 'sometimes|required|integer|exists:task_categories,id',
             'status'      => 'sometimes|required|in:' . implode(',', array_keys(Task::getStatusOptions())),
             'priority'    => 'sometimes|required|in:' . implode(',', array_keys(Task::getPriorityOptions())),
         ]);
